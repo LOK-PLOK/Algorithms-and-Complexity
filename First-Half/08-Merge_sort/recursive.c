@@ -31,24 +31,24 @@ void mergeSort(int arr[], int low, int high) {
         memcpy(left, arr + low, sizeof(int) * leftSize);//---------------| can be done manually
         memcpy(right, arr + mid + 1, sizeof(int) * rightSize);//---------|
 
-        int lIndex = 0;
-        int rIndex = 0;
+        int i = 0;
+        int j = 0;
         int arrIndex = low;
 
-        while (lIndex < leftSize && rIndex < rightSize) { //----------
-            if (right[rIndex] < left[lIndex]) {                     //
-                arr[arrIndex++] = right[rIndex++];                  //
+        while (i < leftSize && j < rightSize) { //-------------------
+            if (right[j] < left[i]) {                               //
+                arr[arrIndex++] = right[j++];                       //
             } else {                                                //
-                arr[arrIndex++] = left[lIndex++];                   //
+                arr[arrIndex++] = left[i++];                        //
             }                                                       //
         }                                                           //
                                                                     // ---> merging process (similar to union but includes duplicates)
-        while (lIndex < leftSize) {                                 //
-            arr[arrIndex++] = left[lIndex++];                       //
+        while (i < leftSize) {                                      //
+            arr[arrIndex++] = left[i++];                            //
         }                                                           //
                                                                     //
-        while (rIndex < rightSize) {                                //
-            arr[arrIndex++] = right[rIndex++];                      //
+        while (j < rightSize) {                                     //
+            arr[arrIndex++] = right[j++];                           //
         }                                                           //
-    }//----------------------------------------------------------------
+    }//--------------------------------------------------------------
 }
