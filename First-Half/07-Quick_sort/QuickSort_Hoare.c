@@ -3,7 +3,7 @@
 
 void quickSort(int arr[], int low, int high);
 void quickSortWrapper(int arr[], int size);
-int lomuto(int arr[],int low,int high);
+int hoare(int arr[],int low,int high);
 
 int main(void){
   
@@ -17,42 +17,47 @@ void quickSortWrapper(int arr[], int size) {
 
 void quickSort(int arr[], int low, int high) {  
   if(low < high){
-    int i = low-1,j=low,temp;
-    int pivot = arr[high];
+    int i = low-1, j = high + 1, pivot = arr[low],temp;
 
-    for(;j<high;j++){
-      if(arr[j] <= pivot){
+    while(i<j){
+      do{
         i++;
+      }while(arr[i] < pivot);
+
+      do{
+        j--;
+      }while(arr[j] > pivot);
+
+      if(i < j){
         temp = arr[i];
         arr[i] = arr[j];
         arr[j] = temp;
       }
     }
-    i++;
-    temp = arr[i];
-    arr[i] = arr[high];
-    arr[high] = temp;
 
-    quickSort(arr,low,i-1);
-    quickSort(arr,i+1,high);
+    quickSort(arr,low,j);
+    quickSort(arr,j+1,high);
   }
 }
 
-// int lomuto(int arr[],int low,int high){
-//   int pivot = arr[high];
-//     int i = low - 1;
+// int hoare(int arr[],int low,int high){
+//   int i = low-1,j=high +1,pivot = arr[low],temp;
 
-//     for (int j = low; j < high; j++) {
-//         if (arr[j] <= pivot) {
-//             i++;
-//             int temp = arr[i];
-//             arr[i] = arr[j];
-//             arr[j] = temp;
-//         }
+//   while(i<j){
+//     do{
+//       i++;
+//     }while(arr[i] < pivot);
+
+//     do{
+//       j--;
+//     }while(arr[j] > pivot);
+
+//     if(i < j){
+//       temp = arr[i];
+//       arr[i] = arr[j];
+//       arr[j] = temp;
 //     }
-//     i++;
-//     int temp = arr[i];
-//     arr[i] = arr[high];
-//     arr[high] = temp;
-//     return i;
+//   }
+
+//   return j;
 // }
