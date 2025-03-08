@@ -3,6 +3,7 @@
 
 void heapSort(int arr[], int n);
 void heapifySubtree(int arr[],int lastNdx,int parent);
+void heapifySubtreeRec(int arr[],int lastNdx,int parent);
 
 int main(void){
     
@@ -12,7 +13,7 @@ int main(void){
 
 void heapSort(int arr[], int size){
     int i,lastndx = size-1,temp;
-
+    
     for(i = (lastndx-1)/2; i>=0; i--){
         heapifySubtree(arr,lastndx,i);
     }
@@ -27,20 +28,20 @@ void heapSort(int arr[], int size){
 
 void heapifySubtree(int arr[],int lastNdx,int parent){
     int big,LC,RC,flag=0,temp;
-
+    
     while(!flag){
         big = parent;
         LC = parent*2+1;
         RC = LC + 1;
-
+        
         if(LC <= lastNdx && arr[LC] > arr[big]){
             big = LC;
         }
-
+        
         if(RC <= lastNdx && arr[RC] > arr[big]){
             big = RC;
         }
-
+        
         if(big != parent){
             temp = arr[big];
             arr[big] = arr[parent];
@@ -50,4 +51,26 @@ void heapifySubtree(int arr[],int lastNdx,int parent){
             flag = 1;
         }
     }
+}
+
+void heapifySubtreeRec(int arr[],int lastNdx,int parent){
+    int big = parent,temp;
+    int LC = parent*2+1;
+    int RC = LC + 1;
+
+    if(LC <= lastNdx && arr[LC] > arr[big]){
+        big = LC;
+    }
+
+    if(RC <= lastNdx && arr[RC] > arr[big]){
+        big = RC;
+    }
+
+    if(big != parent){
+        temp = arr[big];
+        arr[big] = arr[parent];
+        arr[parent] = temp;
+        heapifySubtreeRec(arr,lastNdx,big);
+    }
+
 }
