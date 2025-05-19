@@ -220,106 +220,50 @@ void displayTrie(Trie tree) {
     }
 }
 
-// PathNode structure to keep track of the path during traversal
-typedef struct PathNode {
-    Trie* nodePtr;    // Pointer to the node pointer in the trie
-    int index;        // Index of this node in its parent's array
-    struct PathNode* prev;  // Previous node in path
-} PathNode;
-
-void deleteWord(Trie* tree, char* word) {
-    if (*tree == NULL || word == NULL || *word == '\0') 
-        return;
-    
-    // Create the first path node (root)
-    PathNode* path = (PathNode*)malloc(sizeof(PathNode));
-    if (path == NULL) return;
-    path->nodePtr = tree;
-    path->index = -1;  // Root has no index
-    path->prev = NULL;
-    
-    // Traverse the trie building the path
-    Trie* current = tree;
-    PathNode* currentPath = path;
-    int index;
-    
-    // Follow the path of the word, building linked list path
-    for (int i = 0; word[i] != '\0'; i++) {
-        index = word[i] - 'a';
-        if (*current == NULL || (*current)->next[index] == NULL) {
-            // Word not found, clean up path and return
-            while (path != NULL) {
-                PathNode* temp = path;
-                path = path->prev;
-                free(temp);
-            }
-            return;
-        }
-        
-        // Update current trie position
-        current = &((*current)->next[index]);
-        
-        // Add new node to our path
-        PathNode* newNode = (PathNode*)malloc(sizeof(PathNode));
-        if (newNode == NULL) {
-            // Memory allocation failed, clean up and return
-            while (path != NULL) {
-                PathNode* temp = path;
-                path = path->prev;
-                free(temp);
-            }
-            return;
-        }
-        
-        newNode->nodePtr = current;
-        newNode->index = index;
-        newNode->prev = currentPath;
-        currentPath = newNode;
-    }
-    
-    // Check for terminator node
-    if (*current == NULL || (*current)->next[ALPHABET_SIZE] == NULL) {
-        // Word not complete in trie, clean up path and return
-        while (path != NULL) {
-            PathNode* temp = path;
-            path = path->prev;
-            free(temp);
-        }
-        return;
-    }
-    
-    // Remove the terminator node and update child count
-    free((*current)->next[ALPHABET_SIZE]);
-    (*current)->next[ALPHABET_SIZE] = NULL;
-    (*current)->childCount--;
-    
-    // Work backward through the path removing unnecessary nodes
-    while (currentPath != NULL && *currentPath->nodePtr != NULL) {
-        if ((*currentPath->nodePtr)->childCount == 0) {
-            // This node has no children, remove it
-            free(*currentPath->nodePtr);
-            *currentPath->nodePtr = NULL;
+// Recursive helper function for deleteWord
+// Returns 1 if this node should be deleted, 0 otherwise
+int deleteWordHelper(Trie* node, char* word) {
+    // Base case: end of word
+    if (*word == '\0') {
+        // Check if this is a valid word ending
+        if ((*node)->next[ALPHABET_SIZE] != NULL) {
+            // Delete the terminator node
+            free((*node)->next[ALPHABET_SIZE]);
+            (*node)->next[ALPHABET_SIZE] = NULL;
+            (*node)->childCount--;
             
-            // Update parent's child count if this isn't the root
-            if (currentPath->prev != NULL && currentPath->prev->nodePtr != tree) {
-                Trie parent = *currentPath->prev->nodePtr;
-                parent->childCount--;
-            }
-        } else {
-            // Node still has other children, stop deletion
-            break;
+            // Return whether this node should be deleted
+            return ((*node)->childCount == 0);
         }
-        
-        // Move up the path
-        PathNode* temp = currentPath;
-        currentPath = currentPath->prev;
-        free(temp);
+        return 0;  // Word not found
     }
     
-    // Clean up any remaining path nodes
-    while (currentPath != NULL) {
-        PathNode* temp = currentPath;
-        currentPath = currentPath->prev;
-        free(temp);
+    // Get index for current character
+    int index = *word - 'a';
+    
+    // Check if path exists
+    if ((*node)->next[index] == NULL)
+        return 0;  // Word not found
+    
+    // Recurse to next character in word
+    if (deleteWordHelper(&((*node)->next[index]), word + 1)) {
+        // Child node should be deleted
+        free((*node)->next[index]);
+        (*node)->next[index] = NULL;
+        (*node)->childCount--;
+        
+        // Return whether this node should also be deleted
+        return ((*node)->childCount == 0);
     }
+    
+    return 0;  // Don't delete this node
+}
+
+// Delete a word from the trie using recursive approach
+void deleteWord(Trie* tree, char* word) {
+    if (tree == NULL || *tree == NULL || word == NULL || *word == '\0')
+        return;
+        
+    // Call the recursive helper
+    deleteWordHelper(tree, word);
 }

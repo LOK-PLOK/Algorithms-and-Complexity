@@ -137,39 +137,18 @@ int searchWord(Trie tree, char* word) {
     return 0;
 }
 
-// Helper function to check if a node has children
-int isNodeEmpty(Trie node) {
-    return (node->nextLetter == NULL && node->newWord == NULL);
-}
-
-// Helper function for deleteWord, handles recursive deletion
-int deleteHelper(Trie* tree, char* word, int depth) {
-    // Base case: If tree is empty
-    if (*tree == NULL) {
+// Recursive function to delete a word from the trie
+// Returns 1 if the node should be deleted, 0 otherwise
+int deleteWord(Trie* tree, char* word) {
+    // Base cases
+    if (tree == NULL || *tree == NULL || word == NULL) {
         return 0;
     }
     
-    // If last character of word is being processed
-    if (word[depth] == '\0') {
-        // Found the end-of-word marker
-        if ((*tree)->letter == '\0') {
-            // If this node has no other branches
-            if (isNodeEmpty(*tree)) {
-                free(*tree);
-                *tree = NULL;
-                return 1; // Node deleted
-            } else {
-                // Node has other branches, just move to next word
-                Trie temp = *tree;
-                *tree = (*tree)->newWord;
-                free(temp);
-                return 0; // Node was not completely deleted
-            }
-        }
-        
-        // If we are here, then the current node is not end of word
-        // Search in alternative words
-        Trie* trav = &((*tree)->newWord);
+    // End of word reached
+    if (*word == '\0') {
+        // Find the end marker in the list of alternative letters
+        Trie* trav = tree;
         while (*trav != NULL && (*trav)->letter != '\0') {
             trav = &((*trav)->newWord);
         }
@@ -179,40 +158,35 @@ int deleteHelper(Trie* tree, char* word, int depth) {
             Trie temp = *trav;
             *trav = (*trav)->newWord;
             free(temp);
-            return 0;
+            
+            // Return whether the parent node should also be deleted
+            // (if it has no children)
+            return (*tree == NULL || 
+                   ((*tree)->nextLetter == NULL && (*tree)->newWord == NULL));
         }
         return 0;
     }
     
-    // If not the last character, find the node corresponding to current character
+    // Find the node for current letter
     Trie* trav = tree;
-    while (*trav != NULL && (*trav)->letter != word[depth]) {
+    while (*trav != NULL && (*trav)->letter != *word) {
         trav = &((*trav)->newWord);
     }
     
-    // If character node found
+    // If letter found, process the next letter
     if (*trav != NULL) {
-        // Recur for the next character
-        int shouldDeleteCurrentNode = deleteHelper(&((*trav)->nextLetter), word, depth + 1);
-        
-        // If child node was deleted and current node has no other children
-        if (shouldDeleteCurrentNode && (*trav != NULL) && isNodeEmpty(*trav)) {
-            Trie temp = *trav;
-            *trav = (*trav)->newWord;
-            free(temp);
-            return 1; // Current node can be deleted
+        // Recurse with next letter
+        if (deleteWord(&((*trav)->nextLetter), word + 1)) {
+            // If next letter's node was deleted and current node has no children
+            if ((*trav)->nextLetter == NULL && (*trav)->newWord == NULL) {
+                free(*trav);
+                *trav = NULL;
+                return 1; // This node can be deleted too
+            }
         }
     }
     
-    return 0; // Don't delete current node
-}
-
-int deleteWord(Trie* tree, char* word) {
-    if (tree == NULL || *tree == NULL || word == NULL) {
-        return 0;
-    }
-    
-    return deleteHelper(tree, word, 0);
+    return 0;
 }
 
 void displayTrieHelper(Trie node, char* prefix, int level) {
