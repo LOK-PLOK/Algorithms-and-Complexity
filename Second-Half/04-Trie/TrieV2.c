@@ -10,6 +10,7 @@ typedef struct node {
 }*Trie,trie;
 
 void initTree(Trie* tree);
+void initNode(Trie tree);
 void insertWord(Trie* tree,char* word);
 int searchWord(Trie tree, char* word);
 int deleteWord(Trie* tree, char* word);
@@ -18,7 +19,7 @@ void displayTrie(Trie tree);
 int main(){
     Trie tree;
     initTree(&tree);
-      // Insert some words
+    // Insert some words
     insertWord(&tree,"apple");
     insertWord(&tree,"apply");
     insertWord(&tree,"application");
@@ -36,7 +37,7 @@ int main(){
     // Delete a word
     printf("\nDeleting 'apple'...\n");
     deleteWord(&tree, "apple");
-      // Display the Trie structure before deletion
+    // Display the Trie structure before deletion
     printf("\nTrie structure before deletion:\n");
     displayTrie(tree);
     
@@ -68,41 +69,53 @@ void initTree(Trie* tree){
     *tree = NULL;
 }
 
+void initNode(Trie tree){
+    tree->letter = '\0';
+    tree->newWord = tree->nextLetter = NULL;
+}
+
 void insertWord(Trie* tree,char* word){
-     int i = 0;
+if (word == NULL || *word == '\0') {
+        return;
+    }
+    
     Trie* trav = tree;
+    int i;
     
     // Process each character in the word
-    for(i = 0; word[i] != '\0'; i++) {
-        // Find node for current letter
-        for(; *trav != NULL && (*trav)->letter != word[i]; trav = &(*trav)->newWord) { }
+    for (i = 0; word[i] != '\0'; i++) {
+        // Search for the current character in the current level
+        while (*trav != NULL && (*trav)->letter != word[i]) {
+            trav = &((*trav)->newWord);
+        }
         
-        // If node doesn't exist, create it
-        if(*trav == NULL) {
-            *trav = (Trie)malloc(sizeof(trie));
-            if(*trav != NULL) {
-                (*trav)->letter = word[i];
-                (*trav)->nextLetter = NULL;
-                (*trav)->newWord = NULL;
+        // If character doesn't exist at this level, create it
+        if (*trav == NULL) {
+            Trie temp = (Trie)malloc(sizeof(trie));
+            if (temp != NULL) {
+                initNode(temp);
+                temp->letter = word[i];
+                *trav = temp;
             }
         }
         
-        // Move to next letter position
-        trav = &(*trav)->nextLetter;
+        // Move to the next letter position
+        trav = &((*trav)->nextLetter);
     }
     
-    // Mark end of word with an empty node if not already present
-    for(; *trav != NULL && (*trav)->letter != '\0'; trav = &(*trav)->newWord) { }
+    // Add end-of-word marker if it doesn't already exist
+    while (*trav != NULL && (*trav)->letter != '\0') {
+        trav = &((*trav)->newWord);
+    }
     
-    if(*trav == NULL) {
-        *trav = (Trie)malloc(sizeof(trie));
-        if(*trav != NULL) {
-            (*trav)->letter = '\0';  // End of word marker
-            (*trav)->nextLetter = NULL;
-            (*trav)->newWord = NULL;
+    if (*trav == NULL) {
+        Trie temp = (Trie)malloc(sizeof(trie));
+        if (temp != NULL) {
+            initNode(temp);
+            // '\0' is already set by initNode
+            *trav = temp;
         }
     }
-    
 }
 
 int searchWord(Trie tree, char* word) {
