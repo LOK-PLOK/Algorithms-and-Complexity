@@ -129,24 +129,34 @@ void insertWord(Trie* tree, char* word){
 // Search for a word in the trie
 // Returns 1 if found, 0 if not found
 int searchWord(Trie tree, char* word){
-    if(tree == NULL) return 0;
+    int found = 0;
     
-    Trie current = tree;
-    int index;
-    
-    // Traverse the trie following the path of the word
-    for(int i = 0; word[i] != '\0'; i++){
-        index = word[i] - 'a';
+    if(tree != NULL) {
+        Trie current = tree;
+        int index;
+        int validPath = 1;  // Flag to track if the path is valid
+        int i = 0;
         
-        // If the path doesn't exist, the word is not in the trie
-        if(current->next[index] == NULL)
-        return 0;
+        // Traverse the trie following the path of the word
+        while(word[i] != '\0' && validPath) {
+            index = word[i] - 'a';
+            
+            // If the path doesn't exist, the word is not in the trie
+            if(current->next[index] == NULL) {
+                validPath = 0;
+            } else {
+                current = current->next[index];
+                i++;
+            }
+        }
         
-        current = current->next[index];
+        // Check if this is a complete word (has the terminator node)
+        if(validPath && current->next[ALPHABET_SIZE] != NULL) {
+            found = 1;
+        }
     }
     
-    // Check if this is a complete word (has the terminator node)
-    return (current->next[ALPHABET_SIZE] != NULL);
+    return found;
 }
 
 

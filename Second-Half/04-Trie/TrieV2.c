@@ -108,85 +108,93 @@ void insertWord(Trie* tree,char* word){
 int searchWord(Trie tree, char* word) {
     int i;
     Trie trav = tree;
+    int found = 0;
     
-    // Search for each character in the word
-    for (i = 0; word[i] != '\0'; i++) {
-        // Find node for current letter
-        while (trav != NULL && trav->letter != word[i]) {
-            trav = trav->newWord;
+    // Only proceed if we have a valid tree and word
+    if (tree != NULL && word != NULL) {
+        // Flag to track if we've successfully followed the entire word path
+        int validPath = 1;
+        
+        // Search for each character in the word
+        for (i = 0; word[i] != '\0' && validPath; i++) {
+            // Find node for current letter
+            while (trav != NULL && trav->letter != word[i]) {
+                trav = trav->newWord;
+            }
+            
+            // If we can't find the letter, the word is not in the trie
+            if (trav == NULL) {
+                validPath = 0;
+            } else {
+                // Move to next letter
+                trav = trav->nextLetter;
+            }
         }
         
-        // If we can't find the letter, the word is not in the trie
-        if (trav == NULL) {
-            return 0;
+        // After processing the word, check if there's an end-of-word marker
+        if (validPath && trav != NULL) {
+            while (trav != NULL && !found) {
+                if (trav->letter == '\0') {  // Found end-of-word marker
+                    found = 1;
+                } else {
+                    trav = trav->newWord;
+                }
+            }
         }
-        
-        // Move to next letter
-        trav = trav->nextLetter;
     }
     
-    // After processing the word, check if there's an end-of-word marker
-    while (trav != NULL) {
-        if (trav->letter == '\0') {  // Found end-of-word marker
-            return 1;
-        }
-        trav = trav->newWord;
-    }
-    
-    // No end-of-word marker found
-    return 0;
+    return found;
 }
 
 // Recursive function to delete a word from the trie
 // Returns 1 if the node should be deleted, 0 otherwise
 int deleteWord(Trie* tree, char* word) {
-    // Base cases
-    if (tree == NULL || *tree == NULL || word == NULL) {
-        return 0;
-    }
+    int shouldDelete = 0;
     
-    // End of word reached
-    if (*word == '\0') {
-        // Find the end marker in the list of alternative letters
-        Trie* trav = tree;
-        while (*trav != NULL && (*trav)->letter != '\0') {
-            trav = &((*trav)->newWord);
-        }
-        
-        // If end marker found, delete it
-        if (*trav != NULL) {
-            Trie temp = *trav;
-            *trav = (*trav)->newWord;
-            free(temp);
+    // Only proceed if we have valid inputs
+    if (tree != NULL && *tree != NULL && word != NULL) {
+        // End of word reached
+        if (*word == '\0') {
+            // Find the end marker in the list of alternative letters
+            Trie* trav = tree;
+            while (*trav != NULL && (*trav)->letter != '\0') {
+                trav = &((*trav)->newWord);
+            }
             
-            // Return whether the parent node should also be deleted
-            // (if it has no children)
-            return (*tree == NULL || 
-                   ((*tree)->nextLetter == NULL && (*tree)->newWord == NULL));
-        }
-        return 0;
-    }
-    
-    // Find the node for current letter
-    Trie* trav = tree;
-    while (*trav != NULL && (*trav)->letter != *word) {
-        trav = &((*trav)->newWord);
-    }
-    
-    // If letter found, process the next letter
-    if (*trav != NULL) {
-        // Recurse with next letter
-        if (deleteWord(&((*trav)->nextLetter), word + 1)) {
-            // If next letter's node was deleted and current node has no children
-            if ((*trav)->nextLetter == NULL && (*trav)->newWord == NULL) {
-                free(*trav);
-                *trav = NULL;
-                return 1; // This node can be deleted too
+            // If end marker found, delete it
+            if (*trav != NULL) {
+                Trie temp = *trav;
+                *trav = (*trav)->newWord;
+                free(temp);
+                
+                // Determine whether the parent node should also be deleted
+                // (if it has no children)
+                shouldDelete = (*tree == NULL || 
+                              ((*tree)->nextLetter == NULL && (*tree)->newWord == NULL));
+            }
+        } else {
+            // Find the node for current letter
+            Trie* trav = tree;
+            while (*trav != NULL && (*trav)->letter != *word) {
+                trav = &((*trav)->newWord);
+            }
+            
+            // If letter found, process the next letter
+            if (*trav != NULL) {
+                // Recurse with next letter
+                if (deleteWord(&((*trav)->nextLetter), word + 1)) {
+                    // If next letter's node was deleted and current node has no children
+                    if ((*trav)->nextLetter == NULL && (*trav)->newWord == NULL) {
+                        free(*trav);
+                        *trav = NULL;
+                        shouldDelete = 1; // This node can be deleted too
+                    }
+                }
             }
         }
     }
     
-    return 0;
+    return shouldDelete;
 }
 
 void displayTrieHelper(Trie node, char* prefix, int level) {
